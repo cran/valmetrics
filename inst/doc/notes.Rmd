@@ -1,0 +1,101 @@
+---
+title: "Notes on the valmetrics package"
+author: "Kristin Piikki, Johanna Wetterlind, Mats Soderstrom and Bo Stenberg"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Notes on the valmetrics package}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+  %\usepackage[utf8]{inputenc}
+  %\DeclareUnicodeCharacter{2010}{-}
+  %\DeclareUnicodeCharacter{00A0}{ }
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+## 1 Background
+When models or maps are evaluated, validation metrics of model or map performance are commonly computed, based on vectors of observed values and their corresponding predicted values. In a systematic review of validation practices in the scientific literature within the subject area of digital soil mapping, about thirty different validation metrics were found to be used [Piikki et al., 2021](https://doi.org/10.1111/sum.12694). These measures are sensitive to different aspects of model performance. Some are sensitive to random errors, others are sensitive to systematic error and yet others are sensitive to both (the total error). In addition, some metrics are sensitive to the range of the observed data and some are sensitive to the number of observations in the dataset. In addition, a few are constructed to be sensitive to the number of model parameters used in order to punish for model complexity. What the validation metrics are sensitive to, determine whether it is suitable to compare them between datasets or response variables (the modelled or mapped entity). 
+
+Functions to compute the validation metrics listed by Piikki et al. (in press) are provided as functions in the R package valmetrics. The present document is a simulation study aiming to demonstrate the sensitivities of the validation metrics to: i) different types of error (random errors, systematic errors and their combinations), and ii) different dataset properties (spread in observed values, number of observations (n) and their combinations). 
+	
+This demonstration is based on synthetic datasets of predicted and observed values with different levels of random and systematic errors and with different ranges in observed values and different numbers of observations.
+
+## 2 Materials and methods
+### 2.1 A synthetic dataset for simulation of sensitivities to different types of error
+First, a dataset of synthetic observed values was defined as all integers from 5 to 15. Then twenty-five different prediction sets were constructed, one for each of the orthogonal combinations of five levels (weights) of systematic errors and five levels of random errors. The synthetic predictions were computed according to:
+
+
+$$p_{ijk} = o_{ijk} + w_{ri} × e_{rk} + w_{sj} × e_{sk} $$  
+
+
+where p is a vector of predicted values, o is a vector of observed value, w_r is a vector of weights of the random error, w_s is a vector of weights of the systematic error, e_r is a vector of random errors and e_s is a vector of systemic errors (a bias). The vectors o, e_r and e_s, all of length 11, are:
+
+
+$$o = [5, 6, 7, …, 15] $$
+
+
+$$w_r = w_s = [0, 0.25, 0.5, 0.75, 1] $$
+
+
+$$e_r = [0 , -2, 4, 2, -8, 6, -4, -6, 10, -10, 8] $$
+
+
+$$e_s≈[11,11,11,…,11]$$
+
+
+The systematic error weights were: 0, 25 %, 50 %, 75 % and 100 %. The vector e_r  was obtained by sampling an ordered vector of integers between -5 and 5 without replacement and multiplying by 2. The constant bias of 11 was chosen such that the systematic errors would be of the same magnitude as the random errors. The systematic error was a constant offset 2 times the mean of the absolute random errors:
+
+
+$$2 × mean(abs(e_r )) = 10.90909 $$ 
+
+
+### 2.2 A synthetic dataset for simulation of sensitivities to dataset properties
+The synthetic dataset for simulation of sensitivities to dataset properties was constructed for one selected level of systematic and random errors (w_r=w_s=0.25). The vector of observed data (o) was linearly scaled to the ranges: [1, 19], [3,17 ], [5, 15], [7,13] and [9, 11], i.e to ranges that are 20%, 60%, 100%, 140 % and 180% of the original range in observed values. 
+
+
+$$ranges = [0.2, 0.6, 1, 1.4, 1.8] $$
+
+
+Then, predicted values was computed according to equation 1. The resulting dataset was multiplied 1, 2, 3, 4, or 5 times to get different numbers of observations n:
+
+
+$$n = [11, 22, 33, 44, 55] $$
+
+
+This means that 25 datasets, one for each combination of the five ranges and the five numbers of observations were constructed.  
+
+## 3 Results
+### 3.1 The synthetic datasets
+Plots of predicted values versus observed values in the synthetic datasets are presented in figures 1 and 2.
+
+ ![Figure 1. Synthetic data where five levels of random error and five levels of systematic error are added to the observed dataset to derive the predicted values. The plot denoted with an asterisk is the same as the plot denoted with an asterisk in Figure 2.](fig1.jpg){width=85%}
+ 
+ ![Figure 2. Synthetic data with five different ranges and five different numbers of observations. The random and systematic error weights are 25 % in all cases. The plot denoted with an asterisk is the same as the plot denoted with an asterisk in Figure 1. Note that a small random error was added to the observed and random errors in order to make it visible that the number of observations differ. These errors were not added to the data used for simulation/demonstration. ](fig2.jpg){width=85%}
+
+### 3.2 Simulation results
+
+Figures 3 and 4 show 28 validation metrics for the 25 datasets in Figure 1 and the 25 datasets in Figure 2. In Figure 3, it is evident that ac, adjr2, aic , e, lc, lccc, mad , mae, mape, mare, msdr, mse, nmse, nrmse, nu , precision, rmdse, rmse, rpd, rpiq, smape and sse are sentitive to both random and systematic errors, while mde, mdse and me (also called bias) area sensitive only to systematic error and nu, r, r2 and sde are sensitive only to random error. The metrics are dented by their function names in the valmetrics R package. Equations are given by Piikki et al. (in press). 
+
+![Figure 3. Validation metrics values in relation to added levels (weights) of systematic and random errors. Color scales are stretched for each plot. The 25 circles within each plot are arranged in the same order as the plots in Figure 1. Missing circles means that the validation metric is infinite because there is no error (i.e. when observed values are equal to the predicted values).](fig3.jpg){width=85%}
+ 
+The metrics ac, adjr2, e, lc, lccc, mape, msdr, nmse, nu, r, r2, rpd, rpiq, and smape are sensitive only to the spread in observed values (or sensitive to the spread and only to a very limited degree to n), while aic, sse and sde are sensitive to the size of the dataset (number of observations, n. Eleven of the metrics were insensitive to dataset range and size.
+
+![Figure 4. Validation metrics values in relation to dataset range and number of observations. Color scales are stretched for each plot. The 25 circles within each plot are arranged in the same order as the plots in Figure 2.](fig4.jpg){width=85%}
+
+## 4 Discussion
+Validation metrics that are sensitive to number of samples or spread in observed values cannot be compared directly between datasets with different value ranges or different numbers of observations, or at least one shall bear that in mind. For example, if a digital soil map of soil organic carbon is made for a continent, say Africa, and another soil organic carbon map is made for a country, say Tanzania, and the Nash-Sutcliffe modelling efficiencies (e) is higher for the continental map than for the national map, that does not necessarily mean that at a specific location in Tanzania, the continental map is better than then national map. The national map may well have a smaller error (e.g. a lower mae) at that location. The reason e values are easily compared, is because the continent, presumably has a larger range in soil organic carbon values than the country.
+
+It is evident from Figure 3, that there are several validation metrics that show similar sensitivity patterns to random and systematic errors. We hope that the present simulation study will be helpful to guide modelers to choose a set of validation metrics that are suitable for the comparisons to be made and that show different aspects of model performance, rather than being too similar. One validation metric (skewness of residuals, skew) was excluded from this study as it show a type of systematic error that was not tested here.
+
+## 5 Reference
+Piikki K., Wetterlind J., Soderstrom M., Stenberg B. 2021. Perspectives on validation in digital soil mapping of continuous attributes – a review. Soil Use and Management. [link](https://doi.org/10.1111/sum.12694)
